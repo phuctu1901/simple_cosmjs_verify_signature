@@ -9,33 +9,16 @@ app.set('trust proxy', 1);
 app.post('/verify',
     async function (req, res) {
         try {
+            const original = req.body.original
+            const signature = req.body.signature_data;
+            const prefix = req.body.prefix;
 
-            // {
-            //     pub_key: {
-            //       type: 'tendermint/PubKeySecp256k1',
-            //       value: 'Ax6wV+2qwcR7+bWFyZtFgCRgZUzOh/zsmMJwSqt1DKWt'
-            //     },
-            //     signature: '76tRlEPhToLXtbbFnZq2sUyzkD8VCVOZF/hFtwKfm+U0H6pTdK6C+TUPHdChG7C045fnYXV44og1wsKVVpPU7A=='
-            //   }
-
-            // {
-            //     "title": "Oraichain Testnet Network Login",
-            //     "description": "This is a transaction that allows Oraichain Network to authenticate you with our application.",
-            const nonce = req.body.nonce
-            //   }
-
-            const signature = req.body;
-            const address = amino.pubkeyToAddress(signature.pub_key, "orai");
+            const address = amino.pubkeyToAddress(signature.pub_key, prefix);
             console.log(signature)
             const { pubkey: decodedPubKey, signature: decodedSignature } = amino.decodeSignature(signature);
-            const data = JSON.stringify({
-                title: 'Oraichain Testnet Network Login',
-                description: 'This is a transaction that allows Oraichain Network to authenticate you with our application.',
-                nonce: nonce
-            });
+            const data = JSON.stringify(original);
             // https://github.com/chainapsis/keplr-wallet/blob/master/packages/cosmos/src/adr-36/amino.ts
             const verified = verifyADR36Amino("orai", address, data, decodedPubKey, decodedSignature);
-            console.log("Gia tri duoc verify la: ", verified)
             if (verified) {
                 res.status(200).json({ msg: "Valid signature",  address: address });
             } else {
